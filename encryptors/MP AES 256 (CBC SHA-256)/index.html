@@ -1,0 +1,184 @@
+<!--
+© Miles Paradoxum Group 2026 | Volgograd, Russia
+Программа выведена из эксплуатации и не рекомендуется к использованию.
+-->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MP | AES-256-CBC</title>
+    <script src="code.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; }
+        textarea { width: 100%; font-family: monospace; }
+        .button-group { margin: 15px 0; }
+        button { padding: 10px 15px; margin-right: 10px; cursor: pointer; }
+        .result-section { margin-top: 20px; }
+        #resultText { resize: vertical; min-height: 200px; }
+        .download-btn { background-color: #4CAF50; color: white; }
+        .download-btn:hover { background-color: #45a049; }
+    </style>
+</head>
+<body>
+    <h1>Advanced Encryption System</h1>
+    <h2>Cipher Block Chaining</h2>
+
+    <label for="inputText">Введите текст для шифрования или дешифрования:</label><br>
+    <textarea id="inputText" rows="6"></textarea><br>
+
+    <label for="key">Введите ключ:</label><br>
+    <input type="text" id="key" style="width: 100%; padding: 8px;"><br>
+
+    <div class="button-group">
+        <button onclick="encryptText()">🔒 Зашифровать</button>
+        <button onclick="decryptText()">🔓 Дешифровать</button>
+        <button onclick="downloadResultFile()">⬇️ Скачать .txt</button>
+        <button onclick="copyToClipboard()">📋 Копировать</button>
+    </div>
+
+    <div class="result-section">
+        <h2>Результат:</h2>
+        <textarea id="resultText" readonly></textarea>
+        <p><small id="charCount">Символов: 0</small></p>
+    </div>
+
+    <script>
+async function encryptText() {
+    const inputText = document.getElementById('inputText').value;
+    const password  = document.getElementById('key').value;
+
+    if (!inputText || !password) {
+        alert("Введите текст и ключ.");
+        return;
+    }
+
+    try {
+        const salt = CryptoJS.lib.WordArray.random(16);
+        const iv   = CryptoJS.lib.WordArray.random(16);
+
+        const key = CryptoJS.PBKDF2(password, salt, {
+            keySize:    256 / 32,
+            iterations: 100000,
+            hasher:     CryptoJS.algo.SHA256
+        });
+
+        const encrypted = CryptoJS.AES.encrypt(inputText, key, {
+            iv:      iv,
+            mode:    CryptoJS.mode.CBC,
+            padding: CryptoJS.pad.Pkcs7
+        });
+
+        const result = salt.toString() + iv.toString() + encrypted.ciphertext.toString();
+        
+        const resultTextarea = document.getElementById('resultText');
+        resultTextarea.value = result;
+        updateCharCount();
+        
+        document.getElementById('inputText').value = "";
+    } catch (e) {
+        alert("Ошибка шифрования: " + e.message);
+    }
+}
+
+async function decryptText() {
+    const input    = document.getElementById('inputText').value.trim();
+    const password = document.getElementById('key').value;
+
+    if (!input || !password) {
+        alert("Пожалуйста, введите текст и ключ для дешифрования.");
+        return;
+    }
+
+    if (input.length < 64) {
+        alert("Текст слишком короткий — возможно, данные повреждены.");
+        return;
+    }
+
+    try {
+        const salt      = CryptoJS.enc.Hex.parse(input.slice(0, 32));
+        const iv        = CryptoJS.enc.Hex.parse(input.slice(32, 64));
+        const cipherHex = CryptoJS.enc.Hex.parse(input.slice(64));
+
+        const key = CryptoJS.PBKDF2(password, salt, {
+            keySize:    256 / 32,
+            iterations: 100000,
+            hasher:     CryptoJS.algo.SHA256
+        });
+
+        const decrypted = CryptoJS.AES.decrypt(
+            { ciphertext: cipherHex },
+            key,
+            { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 }
+        );
+
+        const originalText = decrypted.toString(CryptoJS.enc.Utf8);
+
+        if (originalText) {
+            const resultTextarea = document.getElementById('resultText');
+            resultTextarea.value = originalText;
+            updateCharCount();
+        } else {
+            alert("Неверный ключ или данные повреждены.");
+        }
+
+    } catch (e) {
+        alert("Ошибка дешифрования: " + e.message);
+    }
+}
+
+function updateCharCount() {
+    const result = document.getElementById('resultText').value;
+    const count = result.length;
+    document.getElementById('charCount').textContent = 
+        `Символов: ${count.toLocaleString('ru-RU')}`;
+}
+
+function downloadResultFile() {
+    const result = document.getElementById('resultText').value;
+    
+    if (!result) {
+        alert("Результат пуст. Сначала зашифруйте или дешифруйте текст.");
+        return;
+    }
+
+    try {
+        // Создаём Blob с текстом
+        const blob = new Blob([result], { type: 'text/plain;charset=utf-8' });
+        
+        // Создаём URL для Blob
+        const url = window.URL.createObjectURL(blob);
+        
+        // Создаём ссылку и кликаем на неё
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `result_${new Date().toISOString().slice(0, 10)}.txt`;
+        link.style.display = 'none';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Освобождаем ресурсы
+        window.URL.revokeObjectURL(url);
+        
+        console.log("Файл скачан успешно");
+    } catch (e) {
+        alert("Ошибка при скачивании: " + e.message);
+        console.error(e);
+    }
+}
+
+function copyToClipboard() {
+    const resultTextarea = document.getElementById('resultText');
+    resultTextarea.select();
+    document.execCommand('copy');
+    alert('Результат скопирован в буфер обмена!');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('resultText').addEventListener('input', updateCharCount);
+});
+    </script>
+</body>
+</html>
