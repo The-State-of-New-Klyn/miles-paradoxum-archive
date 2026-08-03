@@ -1,0 +1,111 @@
+<!--
+© Miles Paradoxum Group 2024 | Volgograd, Russia
+Программа выведена из эксплуатации и не рекомендуется к использованию.
+-->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Miles Paradoxum Portable v.3.2</title>
+<script>
+function getNumber(letter) {
+    switch (letter.toUpperCase()) {
+        case 'Х': return 1; case 'С': return 2; case 'Щ': return 3; case 'И': return 4;
+        case 'Л': return 5; case 'О': return 6; case 'Ш': return 7; case 'Б': return 8;
+        case 'Ж': return 9; case 'Е': return 10; case 'Д': return 11; case 'Г': return 12;
+        case 'Т': return 13; case 'А': return 14; case 'Ч': return 15; case 'Є': return 16;
+        case 'Ї': return 17; case 'І': return 18; case 'П': return 19; case 'Ц': return 20;
+        case 'Ґ': return 21; case 'Р': return 22; case 'Н': return 23; case 'Я': return 24;
+        case 'Й': return 25; case 'Ф': return 26; case 'Ь': return 27; case 'У': return 28;
+        case 'Ю': return 29; case 'М': return 30; case 'К': return 31; case 'З': return 32;
+        case 'В': return 33; 
+        case 'Э': return 34; case 'Ы': return 35; case 'Ё': return 36; case 'Ъ': return 38;
+        default: return 0;
+    }
+}
+
+function getLetter(num) {
+    switch (num) {
+        case 1: return 'Х'; case 2: return 'С'; case 3: return 'Щ'; case 4: return 'И';
+        case 5: return 'Л'; case 6: return 'О'; case 7: return 'Ш'; case 8: return 'Б';
+        case 9: return 'Ж'; case 10: return 'Е'; case 11: return 'Д'; case 12: return 'Г';
+        case 13: return 'Т'; case 14: return 'А'; case 15: return 'Ч'; case 16: return 'Є';
+        case 17: return 'Ї'; case 18: return 'І'; case 19: return 'П'; case 20: return 'Ц';
+        case 21: return 'Ґ'; case 22: return 'Р'; case 23: return 'Н'; case 24: return 'Я';
+        case 25: return 'Й'; case 26: return 'Ф'; case 27: return 'Ь'; case 28: return 'У';
+        case 29: return 'Ю'; case 30: return 'М'; case 31: return 'К'; case 32: return 'З';
+        case 33: return 'В'; 
+        case 34: return 'Э'; case 35: return 'Ы'; case 36: return 'Ё'; case 38: return 'Ъ';
+        default: return '?';
+    }
+}
+
+function encryptText() {
+    const input = document.getElementById("inputText").value;
+    let result = '';
+    
+    const words = input.split(' ');
+    
+    words.forEach((word, wordIndex) => {
+        let hexValues = [];
+        
+        for (let letter of word) {
+            const num = getNumber(letter);
+            if (num > 0) {
+                hexValues.push(num.toString(16).toUpperCase());
+            } else if (letter >= '0' && letter <= '9') {
+                hexValues.push(letter);
+            }
+        }
+        
+        if (hexValues.length > 0) {
+            result += hexValues.join('-');
+            if (wordIndex < words.length - 1) {
+                result += '. ';
+            }
+        }
+    });
+    
+    document.getElementById("outputText").innerText = 'Закодированный текст: ' + result.trim();
+}
+
+function decryptText() {
+    const input = document.getElementById("decryptInput").value;
+    const words = input.split('. ');
+    let decrypted = '';
+    
+    words.forEach((word, wordIndex) => {
+        const hexValues = word.split('-');
+        for (let hex of hexValues) {
+            if (hex) {
+                const num = parseInt(hex, 16);
+                decrypted += getLetter(num);
+            }
+        }
+        if (wordIndex < words.length - 1) {
+            decrypted += ' ';
+        }
+    });
+    
+    document.getElementById("decryptOutput").innerText = 'Результат: ' + decrypted.trim();
+}
+</script>
+</head>
+<body>
+<h2>Miles Paradoxum Portable v.3.2</h2>
+<p>Программа предназначена для обмена информацией в букво-цифренном виде.<p>
+
+<div id="encryptSection">
+<input type="text" id="inputText" placeholder="Введите текст">
+<button onclick="encryptText()">Зашифровать</button>
+<p id="outputText"></p>
+</div>
+
+<div id="decryptSection">
+<input type="text" id="decryptInput" placeholder="Введите код">
+<button onclick="decryptText()">Дешифровать</button>
+<p id="decryptOutput"></p>
+</div>
+</body>
+</html>
