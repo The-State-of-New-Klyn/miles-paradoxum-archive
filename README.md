@@ -1,2 +1,2 @@
-# miles-paradoxum-archive
+# Miles Paradoxum Archive
 Архив группы Miles Paradoxum
